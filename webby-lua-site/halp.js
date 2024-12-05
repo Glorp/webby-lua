@@ -54,12 +54,13 @@
         } else if (code === "log") {
           console.log(payload);
         } else if (code === "require") {
+          const [_, url, file] = payload.match(/([^\s]+)\s+(.+)/);
           const xmlHttp = new XMLHttpRequest();
           xmlHttp.onreadystatechange = () => {
             if (xmlHttp.readyState === 4) {
-              let code;
+              let code = "";
               if (xmlHttp.status === 200) {
-                code = xmlHttp.responseText;
+                module.FS.writeFile(file, new Uint8Array(xmlHttp.response));
               } else {
                 const err = `${xmlHttp.status}: ${xmlHttp.statusText} (${payload})`;
                 code = `error(${luastr(err)})`;
@@ -67,8 +68,24 @@
               module.ccall("run_lua", "number", ["string"], [luaresume(code)]);
             }
           };
-          xmlHttp.open("GET", payload, true);
+          xmlHttp.responseType = "arraybuffer";
+          xmlHttp.open("GET", url, true);
           xmlHttp.send(null);
+        } else if (code == "file") {
+          const named = payload !== ""
+          const label = named ? `${payload}: ` : "Load file: ";
+          const input = elem("input", { type: "file" });
+          input.onchange = () => {
+            for (const file of input.files) {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                module.FS.writeFile(named ? payload : file.name, new Uint8Array(reader.result));
+                modified(0);
+              }
+              reader.readAsArrayBuffer(file);
+            }
+          };
+          html(elem("div", {}, label, input));
         } else {
           console.error(`unkown code sent from Lua. code: "%o". payload: %o`, code, payload);
         }
@@ -88,15 +105,15 @@
     webSend = nil
     web = {
       send = send,
-      require = function(name, path)
+      require = function(name, path, filename)
         local loaded = package.loaded[name]
         if loaded then return loaded end
+        filename = filename or (name .. ".lua")
         web.co = coroutine.running()
-        send("require", path)
+        send("require", path .. " " .. filename)
         local thunk = coroutine.yield()
-        local res = thunk()
-        package.loaded[name] = res
-        return res
+        thunk()
+        return require(name)
       end,
       run = function(thunk)
         coroutine.wrap(
