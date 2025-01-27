@@ -20,11 +20,11 @@
           print: print,
           printErr: print,
           send: (code, payload) => {
-            if (code === "return") {
+            if (code === "return" || code === "error") {
               if (payload === "") {
                 return;
               }
-              print("return: " + payload);
+              print(`${code}: ${payload}`);
             } else {
               console.error(`unkown code sent from Lua. code: "%o". payload: %o`, code, payload);
             }
