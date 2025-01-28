@@ -30,8 +30,9 @@
             }
           }
         };
+        const runner = `return function(f) return f() end`;
         initWasmModule(config).then((module) => {
-          module.ccall("run_lua", "number", ["string"], [`
+          module.ccall("run_lua", "number", ["string","string"], [runner, `
             local send = webSend
             webSend = nil
             web = {}
@@ -41,7 +42,7 @@
               return function(payload) send(code, payload) end
             end
           `]);
-          run.onclick = () => module.ccall("run_lua", "number", ["string"], [editor.value]);
+          run.onclick = () => module.ccall("run_lua", "number", ["string", "string"], [runner, editor.value]);
         });
       };
     </script>
