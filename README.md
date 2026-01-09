@@ -7,7 +7,7 @@ Anyway: A [Lua](https://www.lua.org/) VM in browser. It's based on [this wasm_lu
 * The Lua VM is started once and never stopped, so you can use it more REPL-like/interactively
 * There's one function for sending a chunk of Lua code from JS to the Lua, and one function for sending two string (`code` and `payload`) from Lua to the JS. (The JS chooses how to interpret code/payload, so you can decide that e.g. sending the code `"log"` should make the JS `console.log` the payload...)
 * Builds a somewhat large .js files instead of a .wasm and a .js file
-* It only does Lua 5.4, since that's what I'm using
+* It only does Lua 5.5, since that's what I'm using
 * Like, different example HTML and stuff
 * Don't know
 
